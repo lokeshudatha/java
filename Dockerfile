@@ -1,13 +1,10 @@
-# Use the official lightweight Python image.
-# https://hub.docker.com/_/python
-FROM python:3.7-slim
+FROM ubuntu:22.04 AS lokesh 
+RUN apt-get update && apt-get install -y openjdk-17-jdk maven git 
+WORKDIR /app 
+RUN git clone https://github.com/spring-projects/spring-petclinic.git .
+RUN mvn clean package -DskipTests -Dcheckstyle.skip=true 
 
-# Copy local code to container image
-ENV APP_HOME /app
-WORKDIR $APP_HOME
-COPY . ./
-
-# Install dependencies.
-RUN pip install Flask gunicorn
-
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 app:app
+FROM ubuntu:22.04 
+WORKDIR /app 
+COPY --from=lokesh /app/target/spring-petclinic-4.0.0-SNAPSHOT.jar app.jar 
+CMD ["java", "-jar", "app.jar"]
