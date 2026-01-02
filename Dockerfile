@@ -1,7 +1,10 @@
-FROM python:3.9-slim 
-RUN apt update && apt install -y git
-WORKDIR /app
-RUN git clone https://github.com/Mohammedirshaq/flask-web-apk.git .
-RUN pip install flask
-EXPOSE 5000
-CMD ["python", "app.py"]
+FROM ubuntu:22.04 AS lokesh 
+RUN apt-get update && apt-get install -y openjdk-17-jdk maven git 
+WORKDIR /app 
+RUN git clone https://github.com/spring-projects/spring-petclinic.git .
+RUN mvn clean package -DskipTests -Dcheckstyle.skip=true 
+
+FROM ubuntu:22.04 
+WORKDIR /app 
+COPY --from=lokesh /app/target/spring-petclinic-4.0.0-SNAPSHOT.jar app.jar 
+CMD ["java", "-jar", "app.jar"]
